@@ -1,0 +1,13 @@
+pipeline:
+  build:
+    image: docker
+    volumes: [ '/var/run/docker.sock:/var/run/docker.sock' ]
+    commands:
+      - docker build --no-cache --pull -t test-image .
+
+  publish:
+    image: spritsail/docker-publish
+    volumes: [ '/var/run/docker.sock:/var/run/docker.sock' ]
+    secrets: [ DOCKER_USERNAME, DOCKER_PASSWORD ]
+    from: test-image
+    repo: spritsail/docker-publish

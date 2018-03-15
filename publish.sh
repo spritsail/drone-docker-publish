@@ -1,0 +1,45 @@
+#!/bin/sh
+set -e
+
+source tags.sh
+
+# $PLUGIN_FROM  re-tag from this repo
+# $PLUGIN_REPO  tag to this repo/repo to push to
+# $PLUGIN_TAGS  newline or comma separated list of tags to push images with
+
+if [ -z "${PLUGIN_REPO}" ]; then
+    error "Missing 'repo' argument for publishing"
+fi
+
+# If no PLUGIN_FROM specifed, assume PLUGIN_REPO instead
+SRC_REPO="${PLUGIN_FROM:-${PLUGIN_REPO}}"
+
+# Log in to the specified Docker registry (or the default if not specified)
+echo -n "${DOCKER_PASSWORD:-${PLUGIN_PASSWORD}}" \
+    | docker login \
+        --password-stdin \
+        -u "${DOCKER_USERNAME:-${PLUGIN_USERNAME}}" \
+        "${PLUGIN_REGISTRY}"
+
+# Ensure at least one tag exists
+# If none specified, assume 'latest'
+if [ -z "${PLUGIN_TAGS}" ]; then
+    TAGS="latest"
+else
+    # Parse and process dynamic tags
+    TAGS="$(echo "${PLUGIN_TAGS}" | tr ',' '\n' | parse_tags | xargs -n 1 | sort -u | xargs)"
+fi
+
+# Tag all images
+for tag in $TAGS; do
+    docker tag "${SRC_REPO}" "${PLUGIN_REPO}:$tag"
+done
+# Push all tagged images
+for tag in $TAGS; do
+    docker push "${PLUGIN_REPO}:$tag"
+done
+# Remove all tagged images
+for tag in $TAGS; do
+    docker rmi "${PLUGIN_REPO}:$tag" >/dev/null 2>/dev/null || true
+done
+docker rmi "${SRC_REPO}" >/dev/null 2>/dev/null || true
