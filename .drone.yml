@@ -9,5 +9,13 @@ pipeline:
   publish:
     image: spritsail/docker-publish
     volumes: [ '/var/run/docker.sock:/var/run/docker.sock' ]
-    secrets: [ DOCKER_USERNAME, DOCKER_PASSWORD ]
+    secrets: [ docker_username, docker_password ]
     repo: spritsail/docker-publish
+
+  notify:
+    image: appleboy/drone-telegram
+    when: { status: [ success, failure ] }
+    secrets: [ telegram_token, telegram_to ]
+    message: |
+      *{{repo.owner}}/{{repo.name}} [{{commit.branch}}]*: Build #{{build.number}}: *{{uppercase build.status}}*
+      {{build.link}}
