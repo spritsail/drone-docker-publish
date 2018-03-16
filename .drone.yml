@@ -1,13 +1,12 @@
 pipeline:
   build:
-    image: docker
+    image: spritsail/docker-build
     volumes: [ '/var/run/docker.sock:/var/run/docker.sock' ]
-    commands:
-      # Pre-tag this image as to bootstrap itself (how meta..)
-      - docker build --no-cache --pull -t spritsail/docker-publish:latest .
+    repo: spritsail/docker-publish
 
   publish:
     image: spritsail/docker-publish
+    when: { branch: [ master ], event: [ push, tag, deployment ] }
     volumes: [ '/var/run/docker.sock:/var/run/docker.sock' ]
     secrets: [ docker_username, docker_password ]
     repo: spritsail/docker-publish
