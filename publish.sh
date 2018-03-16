@@ -56,5 +56,5 @@ docker rmi "${SRC_REPO}" >/dev/null 2>/dev/null || true
 if [ -n "$MICROBADGER_TOKEN" ]; then
     >&2 echo "Updating Microbadger metadata for ${PLUGIN_REPO%:*}"
     apk -Uq add curl && \
-    curl -X POST "https://hooks.microbadger.com/images/${PLUGIN_REPO%:*}/$MICROBADGER_TOKEN" || true
+    curl -sS -X POST "https://hooks.microbadger.com/images/${PLUGIN_REPO%:*}/$MICROBADGER_TOKEN" || true
 fi
