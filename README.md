@@ -57,3 +57,16 @@ beta-2
 beta-2.8
 beta-2.8.243
 ```
+
+### Microbadger
+
+This image has support for updating [Microbadger](https://microbadger.com/) metadata with a webhook, after the image(s) have been pushed; simply provide the repo-specific token via a secret to this container and watch it happen.
+
+
+```yaml
+pipeline:
+  publish:
+    image: spritsail/docker-publish
+    secrets: [ microbadger_token ]
+    ..
+```
