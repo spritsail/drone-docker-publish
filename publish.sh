@@ -7,18 +7,27 @@ source tags.sh
 # $PLUGIN_REPO  tag to this repo/repo to push to
 # $PLUGIN_TAGS  newline or comma separated list of tags to push images with
 
+USERNAME="${DOCKER_USERNAME:-${PLUGIN_USERNAME}}"
+PASSWORD="${DOCKER_PASSWORD:-${PLUGIN_PASSWORD}}"
+
+if [ -z "${USERNAME}" ]; then
+    error "Missing required docker 'username' for pushing"
+elif [ -z "${PASSWORD}" ]; then
+    error "Missing required docker 'username' for pushing"
+fi
+
 if [ -z "${PLUGIN_REPO}" ]; then
-    error "Missing 'repo' argument for publishing"
+    error "Missing 'repo' argument required for publishing"
 fi
 
 # If no PLUGIN_FROM specifed, assume PLUGIN_REPO instead
 SRC_REPO="${PLUGIN_FROM:-${PLUGIN_REPO}}"
 
 # Log in to the specified Docker registry (or the default if not specified)
-echo -n "${DOCKER_PASSWORD:-${PLUGIN_PASSWORD}}" \
+echo -n "${PASSWORD}" \
     | docker login \
         --password-stdin \
-        -u "${DOCKER_USERNAME:-${PLUGIN_USERNAME}}" \
+        --username "${USERNAME}" \
         "${PLUGIN_REGISTRY}"
 
 # Ensure at least one tag exists
