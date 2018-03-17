@@ -31,9 +31,15 @@ echo -n "${PASSWORD}" \
         "${PLUGIN_REGISTRY}"
 
 # Ensure at least one tag exists
-# If none specified, assume 'latest'
 if [ -z "${PLUGIN_TAGS}" ]; then
-    TAGS="latest"
+    # Take into account the case where the repo already has the tag appended
+    if echo "${PLUGIN_REPO}" | grep -q ':'; then
+        TAGS="${PLUGIN_REPO#*:}"
+        PLUGIN_REPO="${PLUGIN_REPO%:*}"
+    else
+    # If none specified, assume 'latest'
+        TAGS="latest"
+    fi
 else
     # Parse and process dynamic tags
     TAGS="$(echo "${PLUGIN_TAGS}" | tr ',' '\n' | parse_tags | xargs -n 1 | sort -u | xargs)"
