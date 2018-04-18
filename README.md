@@ -1,7 +1,15 @@
 [hub]: https://hub.docker.com/r/spritsail/docker-publish
+[git]: https://github.com/spritsail/drone-docker-publish
+[drone]: https://drone.spritsail.io/spritsail/docker-publish
+[mbdg]: https://microbadger.com/images/spritsail/docker-publish
 
 # [spritsail/docker-publish][hub]
-[![](https://images.microbadger.com/badges/image/spritsail/docker-publish.svg)](https://microbadger.com/images/spritsail/docker-publish) [![](https://images.microbadger.com/badges/version/spritsail/docker-publish.svg)][hub] [![Docker Stars](https://img.shields.io/docker/stars/spritsail/docker-publish.svg)][hub] [![Docker Pulls](https://img.shields.io/docker/pulls/spritsail/docker-publish.svg)][hub] [![Build Status](https://drone.spritsail.io/api/badges/spritsail/drone-docker-publish/status.svg)](https://drone.spritsail.io/spritsail/docker-publish)
+[![Layers](https://images.microbadger.com/badges/image/spritsail/docker-publish.svg)][mbdg]
+[![Latest Version](https://images.microbadger.com/badges/version/spritsail/docker-publish.svg)][hub]
+[![Git Commit](https://images.microbadger.com/badges/commit/spritsail/docker-publish.svg)][git]
+[![Docker Stars](https://img.shields.io/docker/stars/spritsail/docker-publish.svg)][hub]
+[![Docker Pulls](https://img.shields.io/docker/pulls/spritsail/docker-publish.svg)][hub]
+[![Build Status](https://drone.spritsail.io/api/badges/spritsail/drone-docker-publish/status.svg)][drone]
 
 ## Supported tags and respective `Dockerfile` links
 
