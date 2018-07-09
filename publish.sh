@@ -21,7 +21,7 @@ if [ -z "${PLUGIN_REPO}" ]; then
 fi
 
 # If no PLUGIN_FROM specifed, assume PLUGIN_REPO instead
-SRC_REPO="${PLUGIN_FROM:-${PLUGIN_REPO}}"
+export SRC_REPO="${PLUGIN_FROM:-${PLUGIN_REPO}}"
 
 # Log in to the specified Docker registry (or the default if not specified)
 echo -n "${PASSWORD}" \

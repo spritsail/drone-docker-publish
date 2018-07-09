@@ -3,7 +3,7 @@
 [drone]: https://drone.spritsail.io/spritsail/docker-publish
 [mbdg]: https://microbadger.com/images/spritsail/docker-publish
 
-# [spritsail/docker-publish][hub]
+# [Spritsail/docker-publish][hub]
 [![Layers](https://images.microbadger.com/badges/image/spritsail/docker-publish.svg)][mbdg]
 [![Latest Version](https://images.microbadger.com/badges/version/spritsail/docker-publish.svg)][hub]
 [![Git Commit](https://images.microbadger.com/badges/commit/spritsail/docker-publish.svg)][git]
@@ -44,19 +44,25 @@ This plugin has multiple flexible methods for tagging images:
     - %auto: %prefix: beta % 1.2.34
     - %file: %prefix: testing % .tag_file
     - %fileauto: %prefix: beta % .version_file
+    - %label: org.label-schema.version
+    - %labelauto: io.spritsail.version.busybox
 ```
 
 - `rawtag` is a single, literal tag
 - `%file` reads a  tag out of a file
 - `%auto` enumerates every major version: e.g. `1.2.34` also produces `1.2` and `1`
 - `%fileauto` is a combination of `%file` and `%auto`
+- `%label` reads the label value from the publishing image as the tag
+- `%labelauto` is a combination of `%label` and `%auto`
 
 Additionally, any of the above can be combined with the extra `%prefix: <pre>%` argument
 to prepend the fixed prefix to all tags that the rule produces.
 
 #### For example:
 
-` %fileauto: %prefix: beta% .version_file`, with `.version_file` having `2.8.243`
+` %fileauto:  %prefix: beta% .version_file`, with `.version_file` having `2.8.243`
+ OR
+` %labelauto: %prefix: beta% org.label-schema.version` with `org.label-schema.version` having `2.8.243`
 
 produces the following
 

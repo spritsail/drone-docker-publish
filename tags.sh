@@ -11,8 +11,10 @@ rem_from() { echo "$2" | sed "s|$1||"; }
 
 # Constant format strings for sed/grep
 file_fmt="$(cmd_fmt 'file')"            # %file: ..
+label_fmt="$(cmd_fmt 'label')"          # %label: ..
 auto_fmt="$(cmd_fmt 'auto')"            # %auto: ..
 fileauto_fmt="$(cmd_fmt 'fileauto')"    # %fileauto: ..
+labelauto_fmt="$(cmd_fmt 'labelauto')"  # %label: ..
 prefix_fmt="$(cmd_fmt 'prefix')"        # %prefix: ..
 
 check_file() {
@@ -49,7 +51,7 @@ parse_prefix() {
     # Check if the auto-format has a prefix tag, and split it
     if echo "$1" | grep -q "$prefix_fmt"; then
         echo "$1" | sed "s|$prefix_fmt.*%\\s*||"
-        echo "$1" | sed -n "s|$prefix_fmt\\(.*\\)\\s*%.*|\\1|p; s|\s||g"
+        echo "$1" | sed -n "s|$prefix_fmt\\(.*\\)\\s*%.*|\\1|p"
     else
         echo "$1"
     fi
@@ -61,8 +63,14 @@ parse_tags() {
 
         # Load in dynamic tag file
         if echo $tag | grep -q "$file_fmt"; then
-            local filename="$(rem_from "$file_fmt" "$tag")"
+            local parts="$(parse_prefix "$(rem_from "$file_fmt" "$tag")")"
+            local filename="$(echo "$parts" | nth_line 1)"
             check_file "$filename"
+
+            # Print prefix if one is present
+            local prefix="$(echo "$parts" | nth_line 2)"
+            [ -n "$prefix" ] && echo -n "$prefix-"
+
             cat "$filename"
 
         # Load in dynamic tag file _and_ auto-process version tags
@@ -75,6 +83,26 @@ parse_tags() {
 
             local version="$(cat $filename)"
             local prefix="$(echo "$parts" | nth_line 2)"
+            auto_tags "$version" "$prefix"
+
+        # Load in image labels
+        elif echo $tag | grep -q "$label_fmt"; then
+            local parts="$(parse_prefix "$(rem_from "$label_fmt" "$tag")")"
+            local label="$(echo "$parts" | nth_line 1)"
+            local prefix="$(echo "$parts" | nth_line 2)"
+
+            # Print prefix if one is present
+            [ -n "$prefix" ] && echo -n "$prefix-"
+
+            docker inspect -f "{{ index .Config.Labels \"$label\" }}" "$SRC_REPO"
+
+        # Load in image labels and generate auto-numbered versions
+        elif echo $tag | grep -q "$labelauto_fmt"; then
+            local parts="$(parse_prefix "$(rem_from "$labelauto_fmt" "$tag")")"
+            local label="$(echo "$parts" | nth_line 1)"
+            local prefix="$(echo "$parts" | nth_line 2)"
+
+            local version="$(docker inspect -f "{{ index .Config.Labels \"$label\" }}" "$SRC_REPO")"
             auto_tags "$version" "$prefix"
 
         # Generate automatic-numbered version tags
