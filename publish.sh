@@ -3,6 +3,11 @@ set -e
 
 source tags.sh
 
+if echo "$DRONE_COMMIT_MESSAGE" | grep -qiF -e "[PUBLISH SKIP]" -e "[SKIP PUBLISH]"; then
+    >&2 echo -e "Skipping publish"
+    exit 0
+fi
+
 # $PLUGIN_FROM  re-tag from this repo
 # $PLUGIN_REPO  tag to this repo/repo to push to
 # $PLUGIN_TAGS  newline or comma separated list of tags to push images with
