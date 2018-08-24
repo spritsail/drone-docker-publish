@@ -34,7 +34,10 @@ auto_tags() {
     [ "$version" = "0" ] && return
 
     # Only trim if there is a minor version to trim off
-    echo "$version" | grep -qv '\.' && return
+    if echo "$version" | grep -qv '\.'; then
+        [ -n "$prefix" ] && echo "$prefix"
+        return
+    fi
 
     # Trim after (and including) the last dot
     local ext="${version##*.}"
