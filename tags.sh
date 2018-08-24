@@ -1,3 +1,4 @@
+#!/bin/sh
 set -e
 
 # ANSI colour escape sequences
@@ -5,122 +6,108 @@ RED='\033[0;31m'
 RESET='\033[0m'
 
 error() { >&2 echo -e "${RED}Error: $@${RESET}"; exit 1; }
-cmd_fmt() { echo "%$@\\s*:\\s*"; }
-nth_line() { cut -f$1 -d$'\n' | tr -d ' '; }
-rem_from() { echo "$2" | sed "s|$1||"; }
-
-# Constant format strings for sed/grep
-file_fmt="$(cmd_fmt 'file')"            # %file: ..
-label_fmt="$(cmd_fmt 'label')"          # %label: ..
-auto_fmt="$(cmd_fmt 'auto')"            # %auto: ..
-fileauto_fmt="$(cmd_fmt 'fileauto')"    # %fileauto: ..
-labelauto_fmt="$(cmd_fmt 'labelauto')"  # %label: ..
-prefix_fmt="$(cmd_fmt 'prefix')"        # %prefix: ..
-
-check_file() {
-    [ -e "$1" ] || error "tag file '$1' doesn't exist"
-    [ -r "$1" ] || error "tag file '$1' cannot be read"
-}
-
-auto_tags() {
-
-    local version="$1"
-    local prefix="$2"
-
-    # If provided, the prefix is prepended, with a dash separator
-    [ -n "$prefix" ] && echo "$prefix-$version" || echo "$version"
-
-    # Ensure pre 1.0 versions don't get truncated to '0'
-    [ "$version" = "0" ] && return
-
-    # Only trim if there is a minor version to trim off
-    if echo "$version" | grep -qv '\.'; then
-        [ -n "$prefix" ] && echo "$prefix"
-        return
-    fi
-
-    # Trim after (and including) the last dot
-    local ext="${version##*.}"
-    local version="$(basename "$version" ".$ext")"
-
-    # Recurse and try to trim the version further
-    auto_tags "$version" "$prefix"
-}
-
-# Takes a string like '%prefix: prepend-this % filename' and
-# outputs first 'filename' then 'prepend-this'. If no prefix is
-# present, only 'filename' is emitted
-parse_prefix() {
-    # Check if the auto-format has a prefix tag, and split it
-    if echo "$1" | grep -q "$prefix_fmt"; then
-        echo "$1" | sed "s|$prefix_fmt.*%\\s*||"
-        echo "$1" | sed -n "s|$prefix_fmt\\(.*\\)\\s*%.*|\\1|p"
-    else
-        echo "$1"
-    fi
-}
 
 parse_tags() {
+    alltags=
+
     # Read each tag, one per line, from stdin
     while read -r tag; do
 
-        # Load in dynamic tag file
-        if echo $tag | grep -q "$file_fmt"; then
-            local parts="$(parse_prefix "$(rem_from "$file_fmt" "$tag")")"
-            local filename="$(echo "$parts" | nth_line 1)"
-            check_file "$filename"
+        # Start with an empty list of tags
+        tags=
 
-            # Print prefix if one is present
-            local prefix="$(echo "$parts" | nth_line 2)"
-            [ -n "$prefix" ] && echo -n "$prefix-"
+        # Split the entire string by | to find each command+args
+        IFS=$'|'
+        for pipe in $tag; do
 
-            cat "$filename"
+            # Split each pipe command into words (cmd + args)
+            IFS=' '
+            set -- $(echo "$pipe")
+            cmd="$1"; shift
 
-        # Load in dynamic tag file _and_ auto-process version tags
-        elif echo $tag | grep -q "$fileauto_fmt"; then
-            local parts="$(parse_prefix "$(rem_from "$fileauto_fmt" "$tag")")"
-            local filename="$(echo "$parts" | nth_line 1)"
+            # If the cmd doesn't begin with %, it must be a literal tag
+            if [ "${cmd:0:1}" != '%' ]; then
+                tags="$(echo "$tags"$'\n'"$cmd" | sed '/^$/d')"
+                continue
+            else
 
-            # Ensure file exists
-            check_file "$filename"
+                # Match on the command (removing the %)
+                case "${cmd:1}" in
+                    # Add a prefix
+                    # usage: prefix <prefix> [separator=-]
+                    prefix)
+                        [ $# -lt 1 ] && error "$cmd expects at least 1 argument"
+                        tags="$(echo "$tags" | sed "s/^/${1}${2:--}/g")"
+                        ;;
 
-            local version="$(cat $filename)"
-            local prefix="$(echo "$parts" | nth_line 2)"
-            auto_tags "$version" "$prefix"
+                    # Add a suffix
+                    # usage: suffix <suffix> [separator=-]
+                    suffix)
+                        [ $# -lt 1 ] && error "$cmd expects at least 1 argument"
+                        tags="$(echo "$tags" | sed "s/$/${2:--}${1}/g")"
+                        ;;
 
-        # Load in image labels
-        elif echo $tag | grep -q "$label_fmt"; then
-            local parts="$(parse_prefix "$(rem_from "$label_fmt" "$tag")")"
-            local label="$(echo "$parts" | nth_line 1)"
-            local prefix="$(echo "$parts" | nth_line 2)"
+                    # Remove a prefix
+                    # usage: rempre <prefix> [separator=-]
+                    rempre)
+                        [ $# -lt 1 ] && error "$cmd expects at least 1 argument"
+                        tags="$(echo "$tags" | sed "s/${1}${2--}//g")"
+                        ;;
 
-            # Print prefix if one is present
-            [ -n "$prefix" ] && echo -n "$prefix-"
+                    # Remove a suffix
+                    # usage: suffix <suffix> [separator=-]
+                    remsuf)
+                        [ $# -lt 1 ] && error "$cmd expects at least 1 argument"
+                        tags="$(echo "$tags" | sed "s/${2:--}${1}//g")"
+                        ;;
 
-            docker inspect -f "{{ index .Config.Labels \"$label\" }}" "$SRC_REPO"
+                    # Generate an automatic list of semver tags
+                    auto)
+                        [ $# -gt 0 ] && error "$cmd expects 0 arguments"
 
-        # Load in image labels and generate auto-numbered versions
-        elif echo $tag | grep -q "$labelauto_fmt"; then
-            local parts="$(parse_prefix "$(rem_from "$labelauto_fmt" "$tag")")"
-            local label="$(echo "$parts" | nth_line 1)"
-            local prefix="$(echo "$parts" | nth_line 2)"
+                        ver=$1
+                        newtags=
 
-            local version="$(docker inspect -f "{{ index .Config.Labels \"$label\" }}" "$SRC_REPO")"
-            auto_tags "$version" "$prefix"
+                        for tag in $tags; do
+                            # Only trim if there is a minor version to trim off
+                            while echo "$tag" | grep -q -e '\.' -e '-'; do
+                                # Save the current tag before trimming
+                                newtags="$(echo "$newtags"$'\n'"$tag" | sed '/^$/d')"
 
-        # Generate automatic-numbered version tags
-        elif echo $tag | grep -q "$auto_fmt"; then
-            local parts="$(parse_prefix "$(rem_from "$auto_fmt" "$tag")")"
-            local version="$(echo "$parts" | nth_line 1)"
-            local prefix="$(echo "$parts" | nth_line 2)"
-            auto_tags "$version" "$prefix"
+                                # Trim after (and including) the last dot/dash
+                                # Recurse and try to trim the version further
+                                tag="$(echo $tag | sed -E 's/(.*)[\.-].*/\1/')"
+                            done
 
-        # else just use the tag raw
-        else
-            echo $tag
-        fi
+                            # Keep the last tag after trimming
+                            newtags="$(echo "$newtags"$'\n'"$tag" | sed '/^$/d')"
+                        done
+                        tags="$newtags"
+                        ;;
 
-    # Remove any duplicate tags and sort them
+                    # Fetch docker image label
+                    # usage: label <label-name> [image name=$SRC_REPO]
+                    label)
+                        [ $# -lt 1 ] && error "$cmd expects at least 1 argument"
+                        tags="$(docker inspect -f "{{ index .Config.Labels \"$1\" }}" "${2:-$SRC_REPO}")"
+                        ;;
+
+                    # Load a tag from a file
+                    # usage: file <file-name>
+                    file)
+                        [ $# -eq 1 ] && error "$cmd expects 1 argument"
+                        [ -e "$1" ] || error "tag file '$1' doesn't exist"
+                        [ -r "$1" ] || error "tag file '$1' cannot be read"
+                        tags="$(cat "$1")"
+                        ;;
+                esac
+            fi
+        done
+
+        alltags="$alltags"$'\n'"$tags"
     done
+
+    # Print all of the tags, sans empty lines
+    echo "$alltags" | sed '/^$/d'
 }
 

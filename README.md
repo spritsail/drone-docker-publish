@@ -33,43 +33,54 @@ pipeline:
 
 ### Tagging
 
-This plugin has multiple flexible methods for tagging images:
+This plugin provides functionality to filter and mutate versions through multiple filters, much like a unix pipe.
 
+Examples:
 ```yaml
   tags:
-    - raw-tag
-    - %auto: 1.5.123
-    - %file: .tag_file
-    - %fileauto: .version_file
-    - %auto: %prefix: beta % 1.2.34
-    - %file: %prefix: testing % .tag_file
-    - %fileauto: %prefix: beta % .version_file
-    - %label: org.label-schema.version
-    - %labelauto: io.spritsail.version.busybox
+    - latest
+    - beta
+    - 1.5.123
+    - 1.5.123 | %auto
+    - %file .tag_file
+    - %file .version_file | auto
+    - 1.2.34 | %prefix beta | auto
+    - %file .tag_file | %prefix testing
+    - %file .version_file | %prefix beta | auto
+    - %label org.label-schema.version
+    - %label io.spritsail.version.busybox | auto
 ```
 
-- `rawtag` is a single, literal tag
-- `%file` reads a  tag out of a file
-- `%auto` enumerates every major version: e.g. `1.2.34` also produces `1.2` and `1`
-- `%fileauto` is a combination of `%file` and `%auto`
-- `%label` reads the label value from the publishing image as the tag
-- `%labelauto` is a combination of `%label` and `%auto`
+#### Commands / Filters
 
-Additionally, any of the above can be combined with the extra `%prefix: <pre>%` argument
-to prepend the fixed prefix to all tags that the rule produces.
+Every filter starts with a percent symbol, without it the command is treated as a literal tag.  
+Usage arguments are `<required>` `<optional=default>`
 
-#### For example:
+Currently available commands are as follows:
 
-` %fileauto:  %prefix: beta% .version_file`, with `.version_file` having `2.8.243`
- OR
-` %labelauto: %prefix: beta% org.label-schema.version` with `org.label-schema.version` having `2.8.243`
+- `%prefix` adds a prefix to all tags ~ _**usage:** `%prefix <prefix> [separator=-]`_
+- `%suffix` adds a suffix to all tags ~ _**usage:** `%suffix <suffix> [separator=-]`_
+- `%rempre` removes a prefix from all tags ~ _**usage:** `%rempre <prefix> [separator=-]`_
+- `%remsuf` remove a suffix from all tags ~ _**usage:** `%remsuf <suffix> [separator=-]`_
+- `%auto`   generates automatic semver-like versions ~ _**usage:** `%auto`_
+- `%label`  takes a label from a docker image ~ _**usage:** `%label <label-name> [image name=$SRC_REPO]`_
+- `%file`   takes a value from a file ~ _**usage:** `%file <file-name>`_
 
-produces the following
+This small library of filters is enough for our use but suggestions/PRs are welcome for anything you could want.
+
+##### For example:
+
+- `%file .version_file | %prefix beta | %auto`, with `.version_file` having `2.8.243`  
+_**or**_
+- `%label org.label-schema.version | %prefix: beta | %auto` with `org.label-schema.version` having `2.8.243`
+
+produces the following set of tags
 
 ```
-beta-2
-beta-2.8
 beta-2.8.243
+beta-2.8
+beta-2
+beta
 ```
 
 ### Microbadger
