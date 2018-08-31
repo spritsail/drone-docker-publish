@@ -100,6 +100,9 @@ parse_tags() {
                         [ -r "$1" ] || error "tag file '$1' cannot be read"
                         tags="$(cat "$1")"
                         ;;
+                    *)
+                        error "unknown command '$cmd'"
+                        ;;
                 esac
             fi
         done
