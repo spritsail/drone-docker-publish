@@ -85,13 +85,4 @@ beta
 
 ### Microbadger
 
-This image has support for updating [Microbadger](https://microbadger.com/) metadata with a webhook, after the image(s) have been pushed; simply provide the repo-specific token via a secret to this container and watch it happen.
-
-
-```yaml
-pipeline:
-  publish:
-    image: spritsail/docker-publish
-    secrets: [ microbadger_token ]
-    ..
-```
+This image has built-in support for updating [Microbadger](https://microbadger.com/) metadata with a webhook, after the image(s) have been pushed. The token will be automatically retrieved to update the image, there is no need to provide it.
