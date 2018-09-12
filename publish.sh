@@ -30,11 +30,17 @@ fi
 export SRC_REPO="${PLUGIN_FROM:-${PLUGIN_REPO}}"
 
 # Log in to the specified Docker registry (or the default if not specified)
-echo -n "${PASSWORD}" \
+login_error="$(
+    echo -n "${PASSWORD}" \
     | docker login \
         --password-stdin \
         --username "${USERNAME}" \
-        "${PLUGIN_REGISTRY}"
+        "${PLUGIN_REGISTRY}" \
+    2>&1
+)"
+if [ $? -ne 0 ]; then
+    >&2 echo "$login_error"
+fi
 
 # Ensure at least one tag exists
 if [ -z "${PLUGIN_TAGS}" ]; then
