@@ -63,14 +63,16 @@ parse_tags() {
 
                     # Generate an automatic list of semver tags
                     auto)
-                        [ $# -gt 0 ] && error "$cmd expects 0 arguments"
+                        [ $# -gt 1 ] && error "$cmd expects at most 1 argument"
 
-                        ver=$1
+                        min=${1:-0}
                         newtags=
 
                         for tag in $tags; do
                             # Only trim if there is a minor version to trim off
-                            while echo "$tag" | grep -q -e '\.' -e '-'; do
+                            while echo "$tag" | grep -q -e '\.' -e '-' && \
+                                [ -z "$min" -o ! $(echo "$tag" | tr . \\n | wc -l) -le $min ]; do
+
                                 # Save the current tag before trimming
                                 newtags="$(echo "$newtags"$'\n'"$tag" | sed '/^$/d')"
 

@@ -62,7 +62,7 @@ Currently available commands are as follows:
 - `%suffix` adds a suffix to all tags ~ _**usage:** `%suffix <suffix> [separator=-]`_
 - `%rempre` removes a prefix from all tags ~ _**usage:** `%rempre <prefix> [separator=-]`_
 - `%remsuf` remove a suffix from all tags ~ _**usage:** `%remsuf <suffix> [separator=-]`_
-- `%auto`   generates automatic semver-like versions ~ _**usage:** `%auto`_
+- `%auto`   generates automatic semver-like versions. optionally takes a minimum length value ~ _**usage:** `%auto [limit]`_
 - `%label`  takes a label from a docker image ~ _**usage:** `%label <label-name> [image name=$SRC_REPO]`_
 - `%file`   takes a value from a file ~ _**usage:** `%file <file-name>`_
 
@@ -82,6 +82,20 @@ beta-2.8
 beta-2
 beta
 ```
+
+##### Auto
+
+Usage `| %auto [prefix]` where prefix is a positive integer defining the minimum number of parts of the version to keep:
+
+e.g. `%auto 2` with `1.2.3.4.5` as input would produce
+```
+1.2.3.4.5
+1.2.3.4
+1.2.3
+1.2
+```
+
+where the shortest value `1.2` has two parts
 
 ### Microbadger
 
