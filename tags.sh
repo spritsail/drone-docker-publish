@@ -95,7 +95,7 @@ parse_tags() {
                     # Load a tag from a file
                     # usage: file <file-name>
                     file)
-                        [ $# -eq 1 ] && error "$cmd expects 1 argument"
+                        [ $# -ne 1 ] && error "$cmd expects 1 argument"
                         [ -e "$1" ] || error "tag file '$1' doesn't exist"
                         [ -r "$1" ] || error "tag file '$1' cannot be read"
                         tags="$(cat "$1")"
