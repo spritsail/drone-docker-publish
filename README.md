@@ -46,9 +46,9 @@ Examples:
     - %file .version_file | auto
     - 1.2.34 | %prefix beta | auto
     - %file .tag_file | %prefix testing
-    - %file .version_file | %prefix beta | auto
+    - %file .version_file | %prefix beta | %auto
     - %label org.label-schema.version
-    - %label io.spritsail.version.busybox | auto
+    - %label io.spritsail.version.busybox | %auto
 ```
 
 #### Commands / Filters
