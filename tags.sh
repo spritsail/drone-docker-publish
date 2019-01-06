@@ -27,7 +27,7 @@ parse_tags() {
 
             # If the cmd doesn't begin with %, it must be a literal tag
             if [ "${cmd:0:1}" != '%' ]; then
-                tags="$(echo "$tags"$'\n'"$cmd" | sed '/^$/d')"
+                tags="$(echo "$tags"$'\n'"$cmd" | sed -E '/^$/d')"
                 continue
             else
 
@@ -37,28 +37,28 @@ parse_tags() {
                     # usage: prefix <prefix> [separator=-]
                     prefix)
                         [ $# -lt 1 ] && error "$cmd expects at least 1 argument"
-                        tags="$(echo "$tags" | sed "s/^/${1}${2:--}/g")"
+                        tags="$(echo "$tags" | sed -E "s/^/${1}${2:--}/g")"
                         ;;
 
                     # Add a suffix
                     # usage: suffix <suffix> [separator=-]
                     suffix)
                         [ $# -lt 1 ] && error "$cmd expects at least 1 argument"
-                        tags="$(echo "$tags" | sed "s/$/${2:--}${1}/g")"
+                        tags="$(echo "$tags" | sed -E "s/$/${2:--}${1}/g")"
                         ;;
 
                     # Remove a prefix
                     # usage: rempre <prefix> [separator=-]
                     rempre)
                         [ $# -lt 1 ] && error "$cmd expects at least 1 argument"
-                        tags="$(echo "$tags" | sed "s/${1}${2--}//g")"
+                        tags="$(echo "$tags" | sed -E "s/${1}${2--}//g")"
                         ;;
 
                     # Remove a suffix
                     # usage: suffix <suffix> [separator=-]
                     remsuf)
                         [ $# -lt 1 ] && error "$cmd expects at least 1 argument"
-                        tags="$(echo "$tags" | sed "s/${2:--}${1}//g")"
+                        tags="$(echo "$tags" | sed -E "s/${2:--}${1}//g")"
                         ;;
 
                     # Generate an automatic list of semver tags
@@ -74,15 +74,15 @@ parse_tags() {
                                 [ -z "$min" -o ! $(echo "$tag" | tr . \\n | wc -l) -le $min ]; do
 
                                 # Save the current tag before trimming
-                                newtags="$(echo "$newtags"$'\n'"$tag" | sed '/^$/d')"
+                                newtags="$(echo "$newtags"$'\n'"$tag" | sed -E '/^$/d')"
 
                                 # Trim after (and including) the last dot/dash
                                 # Recurse and try to trim the version further
-                                tag="$(echo $tag | sed -E 's/(.*)[\.-].*/\1/')"
+                                tag="$(echo $tag | sed -E -E 's/(.*)[\.-].*/\1/')"
                             done
 
                             # Keep the last tag after trimming
-                            newtags="$(echo "$newtags"$'\n'"$tag" | sed '/^$/d')"
+                            newtags="$(echo "$newtags"$'\n'"$tag" | sed -E '/^$/d')"
                         done
                         tags="$newtags"
                         ;;
@@ -113,6 +113,6 @@ parse_tags() {
     done
 
     # Print all of the tags, sans empty lines
-    echo "$alltags" | sed '/^$/d'
+    echo "$alltags" | sed -E '/^$/d'
 }
 

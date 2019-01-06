@@ -66,6 +66,8 @@ Currently available commands are as follows:
 - `%label`  takes a label from a docker image ~ _**usage:** `%label <label-name> [image name=$SRC_REPO]`_
 - `%file`   takes a value from a file ~ _**usage:** `%file <file-name>`_
 
+Most commands will take a regex compatible with `sed` POSIX extended regex, including `%rempre` and `%remsuf`.
+
 This small library of filters is enough for our use but suggestions/PRs are welcome for anything you could want.
 
 ##### For example:
