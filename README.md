@@ -99,6 +99,35 @@ e.g. `%auto 2` with `1.2.3.4.5` as input would produce
 
 where the shortest value `1.2` has two parts
 
+#### Usage
+
+This container doubles up as a CLI tool, as well as a drone plugin. It can be run as follows to test specific tag output before you push.
+
+For example, a simple usage of `%auto` and `%prefix`
+
+```bash
+docker run -ti --rm spritsail/docker-test \
+  --tags '1.2.3.4-extra | %prefix pre | %auto 2'
+```
+produces
+```
+Running in --tags test mode
+pre-1.2
+pre-1.2.3
+pre-1.2.3.4
+pre-1.2.3.4-extra
+```
+
+More complex filters such as `%label` may require Docker daemon access and additional arguments through the environment. You should deal with these accordingly, for example:
+
+```bash
+docker run -ti --rm \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -e SRC_REPO=user/image-name \
+  spritsail/docker-test \
+  ..
+```
+
 ### Microbadger
 
 This image has built-in support for updating [Microbadger](https://microbadger.com/) metadata with a webhook, after the image(s) have been pushed. The token will be automatically retrieved to update the image, there is no need to provide it.
