@@ -85,5 +85,5 @@ if [ -n "$MICROBADGER_TOKEN" ]; then
 fi
 
 printf "%s... " "Updating Microbadger metadata for ${PLUGIN_REPO%:*}"
-WEBHOOK_URL="$(curl -sS https://api.microbadger.com/v1/images/${PLUGIN_REPO%:*} | jq -r .WebhookURL)"
-curl -sS -X POST "$WEBHOOK_URL"
+WEBHOOK_URL="$(curl -sS https://api.microbadger.com/v1/images/${PLUGIN_REPO%:*} | jq -r .WebhookURL)" && \
+curl -sS -X POST "$WEBHOOK_URL" || true
