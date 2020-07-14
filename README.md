@@ -31,6 +31,11 @@ pipeline:
       - latest
 ```
 
+Docker login credentials can be supplied as either separate arguments, or together in a HTTP basic-auth style colon-delimited string:
+
+`$DOCKER_USERNAME` or `$PLUGIN_USERNAME` to specify the usename, and similar for `_PASSWORD`
+`$DOCKER_LOGIN` or `$PLUGIN_LOGIN` to specify `username:password`
+
 ### Tagging
 
 This plugin provides functionality to filter and mutate versions through multiple filters, much like a unix pipe.
