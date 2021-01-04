@@ -10,12 +10,10 @@ steps:
 - name: build
   pull: always
   image: spritsail/docker-build
-  settings:
-    repo: spritsail/docker-publish
 
 - name: publish
   pull: never
-  image: spritsail/docker-publish
+  image: ${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}:${DRONE_STAGE_TOKEN}
   settings:
     repo: spritsail/docker-publish
     username: {from_secret: docker_username}
@@ -28,6 +26,6 @@ steps:
 
 ---
 kind: signature
-hmac: cca014d64d0fb1965a4d65d1802c104f3a40031d04007ce03135399c70f00bcc
+hmac: 162bf9875ac73665164c1cef3203d7379bbe54cd40d17cb8d3cbcd5fed7dbfe1
 
 ...
