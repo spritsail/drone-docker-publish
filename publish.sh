@@ -39,8 +39,16 @@ if [ -z "${PLUGIN_REPO}" ]; then
     error "Missing 'repo' argument required for publishing"
 fi
 
-# If no PLUGIN_FROM specifed, assume PLUGIN_REPO instead
-export SRC_REPO="${PLUGIN_FROM:-${PLUGIN_REPO}}"
+if [ -n "$PLUGIN_FROM" ]; then
+    SRC_REPO="${PLUGIN_FROM}"
+elif [ -n "$DRONE_STAGE_TOKEN" ] && \
+        docker image inspect "$DRONE_REPO_OWNER/$DRONE_REPO_NAME:$DRONE_STAGE_TOKEN" >/dev/null 2>/dev/null; then
+    SRC_REPO="$DRONE_REPO_OWNER/$DRONE_REPO_NAME:$DRONE_STAGE_TOKEN"
+else
+    # If no PLUGIN_FROM specifed, and no predictable image found, assume PLUGIN_REPO
+    SRC_REPO="$PLUGIN_REPO"
+fi
+export SRC_REPO
 
 # Log in to the specified Docker registry (or the default if not specified)
 echo -n "${PASSWORD}" | \
@@ -70,13 +78,10 @@ for tag in $TAGS; do
 done
 # Push all tagged images
 for tag in $TAGS; do
-    printf "Pushing tag '%s'...\n" $tag
+    printf "Pushing tag '%s'...\n" "$tag"
     docker push "${PLUGIN_REPO}:$tag"
-    printf "\n"
-done
-# Remove all tagged images
-for tag in $TAGS; do
     docker rmi "${PLUGIN_REPO}:$tag" >/dev/null 2>/dev/null || true
+    printf "\n"
 done
 docker rmi "${SRC_REPO}" >/dev/null 2>/dev/null || true
 
