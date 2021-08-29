@@ -132,7 +132,3 @@ docker run -ti --rm \
   spritsail/docker-test \
   ..
 ```
-
-### Microbadger
-
-This image has built-in support for updating [Microbadger](https://microbadger.com/) metadata with a webhook, after the image(s) have been pushed. The token will be automatically retrieved to update the image, there is no need to provide it.
