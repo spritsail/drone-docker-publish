@@ -1,24 +1,30 @@
 #!/bin/sh
+# vim: ft=sh et sw=4
 set -e
 set -o pipefail
 
-source tags.sh
+if [ -n "$DEBUG$PLUGIN_DEBUG" ]; then
+    set -x
+fi
+
+. tags.sh
 
 if [ "$1" = "--tags" ]; then
-    >&2 echo -e "Running in --tags test mode"
+    >&2 printf "Running in --tags test mode"
     shift
     printf "%s\n" "$@" | parse_tags | xargs -n 1 | sort -u
     exit 0
 fi
 
 if echo "$DRONE_COMMIT_MESSAGE" | grep -qiF -e "[PUBLISH SKIP]" -e "[SKIP PUBLISH]"; then
-    >&2 echo -e "Skipping publish"
+    >&2 printf "Skipping publish"
     exit 0
 fi
 
-# $PLUGIN_FROM  re-tag from this repo
-# $PLUGIN_REPO  tag to this repo/repo to push to
-# $PLUGIN_TAGS  newline or comma separated list of tags to push images with
+# $PLUGIN_FROM      re-tag from this repo
+# $PLUGIN_REPO      tag to this repo/repo to push to
+# $PLUGIN_REGISTRY  registry to push the image to
+# $PLUGIN_TAGS      newline or comma separated list of tags to push images with
 
 LOGIN="${DOCKER_LOGIN:-${PLUGIN_LOGIN}}"
 if [ -n "$LOGIN" ]; then
@@ -36,22 +42,28 @@ elif [ -z "${PASSWORD}" ]; then
 fi
 
 if [ -z "${PLUGIN_REPO}" ]; then
-    error "Missing 'repo' argument required for publishing"
+    # Only assume the destination repo if we explicitly specify a registry to push to
+    if [ -n "$PLUGIN_REGISTRY" ] && [ -n "$DRONE_BUILD_NUMBER" ]; then
+        PLUGIN_REPO="drone/$DRONE_REPO/$DRONE_BUILD_NUMBER:$DRONE_STAGE_OS-$DRONE_STAGE_ARCH"
+    else
+        error "Missing 'repo' argument required for publishing"
+    fi
 fi
 
 if [ -n "$PLUGIN_FROM" ]; then
     SRC_REPO="${PLUGIN_FROM}"
-elif [ -n "$DRONE_STAGE_TOKEN" ] && \
-        docker image inspect "$DRONE_REPO_OWNER/$DRONE_REPO_NAME:$DRONE_STAGE_TOKEN" >/dev/null 2>/dev/null; then
-    SRC_REPO="$DRONE_REPO_OWNER/$DRONE_REPO_NAME:$DRONE_STAGE_TOKEN"
 else
     # If no PLUGIN_FROM specifed, and no predictable image found, assume PLUGIN_REPO
     SRC_REPO="$PLUGIN_REPO"
 fi
-export SRC_REPO
+
+# Prepend the registry to the destination image, but not the from image
+if [ -n "${PLUGIN_REGISTRY}" ]; then
+    PLUGIN_REPO="$PLUGIN_REGISTRY/$PLUGIN_REPO"
+fi
 
 # Log in to the specified Docker registry (or the default if not specified)
-echo -n "${PASSWORD}" | \
+printf %s "${PASSWORD}" | \
     docker login \
         --password-stdin \
         --username "${USERNAME}" \
@@ -61,7 +73,8 @@ echo -n "${PASSWORD}" | \
 if [ -z "${PLUGIN_TAGS}" ]; then
     # Take into account the case where the repo already has the tag appended
     if echo "${PLUGIN_REPO}" | grep -q ':'; then
-        TAGS="${PLUGIN_REPO#*:}"
+        # Break after the last colon in case there are multiple, like a registry with a port
+        TAGS="${PLUGIN_REPO##*:}"
         PLUGIN_REPO="${PLUGIN_REPO%:*}"
     else
     # If none specified, assume 'latest'
@@ -83,4 +96,5 @@ for tag in $TAGS; do
     docker rmi "${PLUGIN_REPO}:$tag" >/dev/null 2>/dev/null || true
     printf "\n"
 done
+
 docker rmi "${SRC_REPO}" >/dev/null 2>/dev/null || true

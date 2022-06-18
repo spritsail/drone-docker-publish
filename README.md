@@ -27,6 +27,7 @@ pipeline:
     secrets: [ docker_username, docker_password ]
     from: local-built-image
     repo: spritsail/docker-publish
+    registry: registry.foobar.io
     tags:
       - latest
 ```

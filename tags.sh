@@ -1,11 +1,11 @@
 #!/bin/sh
+# vim: ft=sh noet sw=4
 set -e
 
 # ANSI colour escape sequences
 RED='\033[0;31m'
 RESET='\033[0m'
-
-error() { >&2 echo -e "${RED}Error: $@${RESET}"; exit 1; }
+error() { >&2 printf "${RED}Error: %s${RESET}" "$@"; exit 1; }
 
 parse_tags() {
     alltags=
