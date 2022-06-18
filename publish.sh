@@ -44,7 +44,11 @@ fi
 if [ -z "${PLUGIN_REPO}" ]; then
     # Only assume the destination repo if we explicitly specify a registry to push to
     if [ -n "$PLUGIN_REGISTRY" ] && [ -n "$DRONE_BUILD_NUMBER" ]; then
-        PLUGIN_REPO="drone/$DRONE_REPO/$DRONE_BUILD_NUMBER:$DRONE_STAGE_OS-$DRONE_STAGE_ARCH"
+        if [ -n "$DOCKER_IMAGE_TOKEN" ]; then
+            PLUGIN_REPO="drone/$DRONE_REPO/$DRONE_BUILD_NUMBER/$DOCKER_IMAGE_TOKEN:$DRONE_STAGE_OS-$DRONE_STAGE_ARCH"
+        else
+            PLUGIN_REPO="drone/$DRONE_REPO/$DRONE_BUILD_NUMBER:$DRONE_STAGE_OS-$DRONE_STAGE_ARCH"
+        fi
     else
         error "Missing 'repo' argument required for publishing"
     fi
