@@ -54,6 +54,9 @@ if [ -z "${PLUGIN_REPO}" ]; then
     fi
 fi
 
+# Lowercase PLUGIN_REPO for Dockers requirements
+PLUGIN_REPO=$(echo $PLUGIN_REPO | awk '{print tolower($0)}')
+
 if [ -n "$PLUGIN_FROM" ]; then
     SRC_REPO="${PLUGIN_FROM}"
 # If no registry and no from, try to use the "automagic" from repo
