@@ -5,11 +5,10 @@ FROM docker:${DOCKER_VER}
 ARG VCS_REF
 ARG DOCKER_VER
 
-LABEL maintainer="Spritsail <docker-plugin@spritsail.io>" \
-      org.label-schema.vendor="Spritsail" \
-      org.label-schema.name="docker-publish" \
-      org.label-schema.description="A Drone CI plugin for tagging and pushing built Docker images" \
-      org.label-schema.version=${VCS_REF} \
+LABEL org.opencontainers.image.authors="Spritsail <docker-plugin@spritsail.io>" \
+      org.opencontainers.image.title="docker-publish" \
+      org.opencontainers.image.description="A Drone CI plugin for tagging and pushing built Docker images" \
+      org.opencontainers.image.version=${VCS_REF} \
       io.spritsail.version.docker=${DOCKER_VER}
 
 ADD *.sh /usr/local/bin/
