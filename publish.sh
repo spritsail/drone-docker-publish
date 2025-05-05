@@ -60,11 +60,11 @@ PLUGIN_REPO=$(echo $PLUGIN_REPO | awk '{print tolower($0)}')
 
 if [ -n "$PLUGIN_FROM" ]; then
     SRC_REPO="${PLUGIN_FROM}"
-# If no registry and no from, try to use the "automagic" from repo
-elif [ -z "$PLUGIN_REGISTRY" ] && [ -z "$DOCKER_IMAGE_TOKEN" ] && \
+# Try to use the "automagic" from repo
+elif [ -z "$DOCKER_IMAGE_TOKEN" ] && \
         docker image inspect "drone/$DRONE_REPO/$DRONE_BUILD_NUMBER:$DRONE_STAGE_OS-$DRONE_STAGE_ARCH" >/dev/null 2>/dev/null; then
     SRC_REPO="drone/$DRONE_REPO/$DRONE_BUILD_NUMBER:$DRONE_STAGE_OS-$DRONE_STAGE_ARCH"
-elif [ -z "$PLUGIN_REGISTRY" ] && [ -n "$DOCKER_IMAGE_TOKEN" ] && \
+elif [ -n "$DOCKER_IMAGE_TOKEN" ] && \
         docker image inspect "drone/$DRONE_REPO/$DRONE_BUILD_NUMBER/$DOCKER_IMAGE_TOKEN:$DRONE_STAGE_OS-$DRONE_STAGE_ARCH" >/dev/null 2>/dev/null; then
     SRC_REPO="drone/$DRONE_REPO/$DRONE_BUILD_NUMBER/$DOCKER_IMAGE_TOKEN:$DRONE_STAGE_OS-$DRONE_STAGE_ARCH"
 else
