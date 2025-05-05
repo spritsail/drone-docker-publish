@@ -25,6 +25,7 @@ fi
 # $PLUGIN_REPO      tag to this repo/repo to push to
 # $PLUGIN_REGISTRY  registry to push the image to
 # $PLUGIN_TAGS      newline or comma separated list of tags to push images with
+# $PLUGIN_DELETE    delete image after publishing
 
 LOGIN="${DOCKER_LOGIN:-${PLUGIN_LOGIN}}"
 if [ -n "$LOGIN" ]; then
@@ -111,4 +112,7 @@ for tag in $TAGS; do
     printf "\n"
 done
 
-docker rmi "${SRC_REPO}" >/dev/null 2>/dev/null || true
+if [ -z "${PLUGIN_DELETE}" ]; then
+    printf "Deleting source image ${SRC_REPO}"
+    docker rmi "${SRC_REPO}" >/dev/null 2>/dev/null || true
+fi
