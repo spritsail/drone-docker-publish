@@ -12,6 +12,6 @@ LABEL org.opencontainers.image.authors="Spritsail <docker-plugin@spritsail.io>" 
       io.spritsail.version.docker=${DOCKER_VER}
 
 ADD --chmod=755 *.sh /usr/local/bin/
-RUN apk --no-cache add curl jq
+RUN apk --no-cache add curl jo jq
 
 ENTRYPOINT [ "/usr/local/bin/publish.sh" ]

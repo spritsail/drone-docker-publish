@@ -28,19 +28,21 @@ fi
 # $PLUGIN_DELETE    delete image after publishing
 
 LOGIN="${DOCKER_LOGIN:-${PLUGIN_LOGIN}}"
-if [ -n "$LOGIN" ]; then
-    USERNAME="${LOGIN/:*/}"
-    PASSWORD="${LOGIN/$USERNAME:/}"
-else
+if [ -z "$LOGIN" ]; then
     USERNAME="${DOCKER_USERNAME:-${PLUGIN_USERNAME}}"
     PASSWORD="${DOCKER_PASSWORD:-${PLUGIN_PASSWORD}}"
+
+    if [ -z "${USERNAME}" ]; then
+        error "Missing required docker 'username' for pushing"
+    elif [ -z "${PASSWORD}" ]; then
+        error "Missing required docker 'password' for pushing"
+    fi
+
+    LOGIN="${USERNAME}:${PASSWORD}"
 fi
 
-if [ -z "${USERNAME}" ]; then
-    error "Missing required docker 'username' for pushing"
-elif [ -z "${PASSWORD}" ]; then
-    error "Missing required docker 'username' for pushing"
-fi
+# "login" using the DOCKER_AUTH_CONFIG environment variable: https://github.com/docker/cli/pull/6008
+export DOCKER_AUTH_CONFIG="$(jo "auths=$(jo "${PLUGIN_REGISTRY:-https://index.docker.io/v1/}=$(jo "auth=$(printf %s "${LOGIN}" | base64 -w0)")")")"
 
 if [ -z "${PLUGIN_REPO}" ]; then
     # Only assume the destination repo if we explicitly specify a registry to push to
@@ -77,13 +79,6 @@ if [ -n "${PLUGIN_REGISTRY}" ]; then
     PLUGIN_REPO="$PLUGIN_REGISTRY/$PLUGIN_REPO"
 fi
 
-# Log in to the specified Docker registry (or the default if not specified)
-printf %s "${PASSWORD}" | \
-    docker login \
-        --password-stdin \
-        --username "${USERNAME}" \
-        "${PLUGIN_REGISTRY}"
-
 # Ensure at least one tag exists
 if [ -z "${PLUGIN_TAGS}" ]; then
     # Take into account the case where the repo already has the tag appended
@@ -92,7 +87,7 @@ if [ -z "${PLUGIN_TAGS}" ]; then
         TAGS="${PLUGIN_REPO##*:}"
         PLUGIN_REPO="${PLUGIN_REPO%:*}"
     else
-    # If none specified, assume 'latest'
+        # If none specified, assume 'latest'
         TAGS="latest"
     fi
 else
